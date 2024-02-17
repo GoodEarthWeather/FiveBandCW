@@ -37,8 +37,8 @@ int main(void) {
     lcdInit();
     initSideToneTimer();
     initQSKTimer(qskDelay);  // initialize for 300ms delay
-    wpm = 15;
-    initKeyTimer(wpm);  // initialize keyer timer for 15 WMP
+    wpm = 18;
+    initKeyTimer(wpm);  // initialize keyer timer for 18 WMP
     initADC(BATTERY_MEASUREMENT);
     setTRSwitch(RECEIVE);
 
