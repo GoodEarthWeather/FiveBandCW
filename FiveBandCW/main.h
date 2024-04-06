@@ -148,7 +148,7 @@ void initsi5351(void);
 #define MAX_QSK_DELAY 800   // 800 ms
 #define MIN_QSK_DELAY 5    // 5 ms
 #define MAX_CW_SPEED 30   // wpm
-#define MIN_CW_SPEED 5    / wpm
+#define MIN_CW_SPEED 5    // wpm
 
 #define UPPER_SIDEBAND 0x0
 #define LOWER_SIDEBAND 0x1

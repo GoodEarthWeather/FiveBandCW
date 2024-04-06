@@ -94,9 +94,10 @@ static void keyDown(void)
     Timer_A_disableCaptureCompareInterrupt(TIMER_A1_BASE,TIMER_A_CAPTURECOMPARE_REGISTER_0);
     setTRSwitch(TRANSMIT);
 
-    GPIO_setOutputHighOnPin(CW_OUT);
     txKeyState = TX_KEY_DOWN;
     si5351_RXTX_enable();
+    GPIO_setOutputHighOnPin(CW_OUT);
+
 }
 
 // This routine will stop transmission
@@ -110,7 +111,7 @@ static void keyUp(void)
     Timer_A_startCounter( TIMER_A1_BASE,TIMER_A_CONTINUOUS_MODE);
     txKeyState = TX_KEY_UP;
     GPIO_setOutputLowOnPin(CW_OUT);
-    delay_ms(5);
+    delay_ms(10);
     setTRSwitch(RECEIVE);
     si5351_RXTX_enable();
 }
