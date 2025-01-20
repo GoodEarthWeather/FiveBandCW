@@ -42,8 +42,9 @@
  * In SSB mode, there is no receiver offset so that transmit and receive frequency is the same
  */
 #define RXOFFSET 608
-#define XTAL_FREQ 24998855
-//#define XTAL_FREQ 26999386
+//#define XTAL_FREQ 24998855  // for first bench prototype
+
+#define XTAL_FREQ 24998694   // for field radio 1.0  23-dec-2024
 
 ////////////////////////////////
 //
