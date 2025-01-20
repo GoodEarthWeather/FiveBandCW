@@ -170,6 +170,7 @@ void updateDisplay(uint8_t field)
     extern uint8_t audioState;
     extern uint8_t receiveMode;
     extern uint16_t qskDelay;
+    extern uint8_t paddleOrientation;
     uint8_t i;
     float z;
     uint32_t batV;
@@ -280,6 +281,10 @@ void updateDisplay(uint8_t field)
                     ritStateBuffer[i++] = *result++;
                 ritStateBuffer[i] = '\0';
                 lcdSetText(ritStateBuffer,5,1);
+                break;
+            case MENU_FUNCTION_PADDLE_ORIENTATION :
+                lcdSetText("KEY: ",0,1);
+                (paddleOrientation == PADDLE_DAH_DIT) ? lcdSetText("DAH_DIT", 5,1) : lcdSetText("DIT_DAH", 5,1);
                 break;
             default :
                 break;

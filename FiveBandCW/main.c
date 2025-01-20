@@ -24,6 +24,7 @@ uint8_t txMode;  // enable or disable transmitter
 uint8_t receiveMode;  // indicates whether receiver is set for receiving CW (rxoffset added) or SSB (no offset)
 uint16_t qskDelay = 300;  // breakin delay in milliseconds
 uint8_t tuneMode; // for when tune button is pressed
+uint8_t paddleOrientation;  // paddles configured for dah-dit or dit-dah
 
 
 int main(void) {
@@ -52,7 +53,6 @@ int main(void) {
     txMode = DISABLED;
 
     // set defaults
-
     receiveMode = RXMODE_CW;
     tuneMode = DISABLED;
     spotMode = DISABLED;
@@ -65,6 +65,7 @@ int main(void) {
     selectFilter();
     selectSideband();
     selectMenuFunction();
+    paddleOrientation = PADDLE_DAH_DIT; // default - dah on left, dit on right
 
     updateDisplay(MODE_DISPLAY);
 
@@ -122,6 +123,12 @@ int main(void) {
             {
                 updateCWSpeed();
                 initKeyTimer(wpm);  // update timer with new speed
+            }
+            else if (selectedMenuFunction == MENU_FUNCTION_PADDLE_ORIENTATION)
+            {
+                (paddleOrientation == PADDLE_DAH_DIT) ? (paddleOrientation = PADDLE_DIT_DAH) : (paddleOrientation = PADDLE_DAH_DIT);
+                updateDisplay(MENU_DISPLAY);
+                encoderCWCount = encoderCCWCount = 0;
             }
             else
                 updateFrequency();
@@ -210,7 +217,7 @@ int main(void) {
             buttonPressed = BTN_PRESSED_NONE;
             break;
         case BTN_PRESSED_MENU :
-            (selectedMenuFunction == MENU_FUNCTION_QSK_DELAY) ? (selectedMenuFunction = MENU_FUNCTION_BATVOLTAGE) : (selectedMenuFunction++);
+            (selectedMenuFunction == MENU_FUNCTION_PADDLE_ORIENTATION) ? (selectedMenuFunction = MENU_FUNCTION_BATVOLTAGE) : (selectedMenuFunction++);
             selectMenuFunction();
             buttonPressed = BTN_PRESSED_NONE;
             break;
@@ -229,11 +236,11 @@ int main(void) {
             break;
         case BTN_PRESSED_DIT :
             buttonPressed = BTN_PRESSED_NONE;
-            ditdah(DIT);
+            (paddleOrientation == PADDLE_DAH_DIT) ? ditdah(DIT) : ditdah(DAH);
             break;
         case BTN_PRESSED_DAH :
             buttonPressed = BTN_PRESSED_NONE;
-            ditdah(DAH);
+            (paddleOrientation == PADDLE_DAH_DIT) ? ditdah(DAH) : ditdah(DIT);
             break;
         default :
             // if no buttons have been pressed and selected menu function is CW speed, need to check if pot has moved and update display if so
@@ -370,6 +377,8 @@ void selectMenuFunction(void)
     case MENU_FUNCTION_CWSPEED :
         break;
     case MENU_FUNCTION_QSK_DELAY :
+        break;
+    case MENU_FUNCTION_PADDLE_ORIENTATION :
         break;
     default :
         break;

@@ -144,6 +144,7 @@ void initsi5351(void);
 #define MENU_FUNCTION_BATVOLTAGE 0x0
 #define MENU_FUNCTION_CWSPEED 0x1
 #define MENU_FUNCTION_QSK_DELAY 0x2
+#define MENU_FUNCTION_PADDLE_ORIENTATION 0x3
 
 #define MAX_QSK_DELAY 800   // 800 ms
 #define MIN_QSK_DELAY 5    // 5 ms
@@ -154,6 +155,8 @@ void initsi5351(void);
 #define LOWER_SIDEBAND 0x1
 #define SSB_FILTER 0x0
 #define CW_FILTER 0x1
+#define PADDLE_DAH_DIT 0x0
+#define PADDLE_DIT_DAH 0x1
 
 #define MUTE 0x1
 #define UNMUTE 0x0

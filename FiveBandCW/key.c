@@ -22,12 +22,21 @@ void ditdah(uint8_t key)
     uint8_t ditKeyState;
     uint8_t dahKeyState;
     extern uint8_t txMode;
+    extern uint8_t paddleOrientation;  // paddles configured for dah-dit or dit-dah
 
     iambicMode = DISABLED;
 
     do {
-        ditKeyState = GPIO_getInputPinValue(DIT_KEY);
-        dahKeyState = GPIO_getInputPinValue(DAH_KEY);
+        if (paddleOrientation == PADDLE_DAH_DIT){
+            ditKeyState = GPIO_getInputPinValue(DIT_KEY);
+            dahKeyState = GPIO_getInputPinValue(DAH_KEY);
+        }
+        else {
+            ditKeyState = GPIO_getInputPinValue(DAH_KEY);
+            dahKeyState = GPIO_getInputPinValue(DIT_KEY);
+        }
+        //ditKeyState = GPIO_getInputPinValue(DIT_KEY);
+        //dahKeyState = GPIO_getInputPinValue(DAH_KEY);
         // iambic test
         if ( (dahKeyState == GPIO_INPUT_PIN_LOW) && (ditKeyState == GPIO_INPUT_PIN_LOW) )  // iambic mode, so alternate dit/dah
         {
@@ -69,9 +78,17 @@ void ditdah(uint8_t key)
         } while (done != TIMER_A_CAPTURECOMPARE_INTERRUPT_FLAG);
         Timer_A_clearCaptureCompareInterrupt(TIMER_A2_BASE, TIMER_A_CAPTURECOMPARE_REGISTER_0);
 
+        if (paddleOrientation == PADDLE_DAH_DIT){
+            ditKeyState = GPIO_getInputPinValue(DIT_KEY);
+            dahKeyState = GPIO_getInputPinValue(DAH_KEY);
+        }
+        else {
+            ditKeyState = GPIO_getInputPinValue(DAH_KEY);
+            dahKeyState = GPIO_getInputPinValue(DIT_KEY);
+        }
 
-        ditKeyState = GPIO_getInputPinValue(DIT_KEY);
-        dahKeyState = GPIO_getInputPinValue(DAH_KEY);
+        //ditKeyState = GPIO_getInputPinValue(DIT_KEY);
+        //dahKeyState = GPIO_getInputPinValue(DAH_KEY);
 
         if ((key == DIT) && (ditKeyState == GPIO_INPUT_PIN_HIGH))
             break;
