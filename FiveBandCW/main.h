@@ -35,6 +35,9 @@ void updateCWSpeed(void);
 void ditdah(uint8_t);
 void setTuneMode(void);
 void setTRSwitch(uint8_t);
+void nvsVarInitialize(void);
+void nvsVarRead(void);
+void nvsVarWrite(void);
 
 void i2cSendRegister(uint8_t reg, uint8_t data);
 
@@ -182,5 +185,13 @@ void initsi5351(void);
 // for tr switch
 #define TRANSMIT 0x0
 #define RECEIVE 0x1
+
+// define nvs variables
+typedef struct nsVariables_t{
+    uint8_t cwSpeed;
+    uint16_t qsk;
+    uint8_t paddleConfig;
+} nvsVariables_t;
+
 
 #endif /* MYINCLUDE_MAIN_H_ */

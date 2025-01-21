@@ -22,9 +22,10 @@ uint8_t audioState; // indicates whether receiver is muted or not
 uint8_t spotMode;  // enables sidetone for setting zero beat with incoming signal
 uint8_t txMode;  // enable or disable transmitter
 uint8_t receiveMode;  // indicates whether receiver is set for receiving CW (rxoffset added) or SSB (no offset)
-uint16_t qskDelay = 300;  // breakin delay in milliseconds
+uint16_t qskDelay;  // breakin delay in milliseconds
 uint8_t tuneMode; // for when tune button is pressed
 uint8_t paddleOrientation;  // paddles configured for dah-dit or dit-dah
+nvsVariables_t nvsVar;  // create structure nvsVar of type struct nvsVariables to hold nvs data
 
 
 int main(void) {
@@ -37,8 +38,13 @@ int main(void) {
     initClocks();
     lcdInit();
     initSideToneTimer();
+    nvsVarInitialize();
+    nvsVarRead();  // read nvs variables into nvsVar
+    wpm = nvsVar.cwSpeed;
+    qskDelay = nvsVar.qsk;
+    paddleOrientation = nvsVar.paddleConfig;
+
     initQSKTimer(qskDelay);  // initialize for 300ms delay
-    wpm = 18;
     initKeyTimer(wpm);  // initialize keyer timer for 18 WMP
     initADC(BATTERY_MEASUREMENT);
     setTRSwitch(RECEIVE);
@@ -65,7 +71,6 @@ int main(void) {
     selectFilter();
     selectSideband();
     selectMenuFunction();
-    paddleOrientation = PADDLE_DAH_DIT; // default - dah on left, dit on right
 
     updateDisplay(MODE_DISPLAY);
 
@@ -129,6 +134,8 @@ int main(void) {
                 (paddleOrientation == PADDLE_DAH_DIT) ? (paddleOrientation = PADDLE_DIT_DAH) : (paddleOrientation = PADDLE_DAH_DIT);
                 updateDisplay(MENU_DISPLAY);
                 encoderCWCount = encoderCCWCount = 0;
+                nvsVar.paddleConfig = paddleOrientation;
+                nvsVarWrite();
             }
             else
                 updateFrequency();
@@ -431,7 +438,7 @@ void updateFrequency(void)
                 updateDisplay(MENU_DISPLAY);
         }
     }
-encoderCWCount = encoderCCWCount = 0;
+    encoderCWCount = encoderCCWCount = 0;
 
 }
 
@@ -458,7 +465,9 @@ void updateQSKDelay(void)
             updateDisplay(MENU_DISPLAY);
         }
     }
-encoderCWCount = encoderCCWCount = 0;
+    encoderCWCount = encoderCCWCount = 0;
+    nvsVar.qsk = qskDelay;
+    nvsVarWrite();  // write new value into nvs
 }
 
 // This routine will update the CW speed setting and display
@@ -484,5 +493,7 @@ void updateCWSpeed(void)
             updateDisplay(MENU_DISPLAY);
         }
     }
-encoderCWCount = encoderCCWCount = 0;
+    encoderCWCount = encoderCCWCount = 0;
+    nvsVar.cwSpeed = wpm;
+    nvsVarWrite();  // write new value into nvs
 }
