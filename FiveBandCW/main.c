@@ -151,6 +151,13 @@ int main(void) {
             {
                 txMode = ENABLED;
                 GPIO_setOutputHighOnPin(TXMODE_LED); // turn on LED to indicate transmit mode enabled
+                // if in mute mode, need to disable mute and update menu display
+                if (audioState == MUTE)
+                {
+                    audioState = UNMUTE;
+                    selectAudioState(UNMUTE);
+                    updateDisplay(MENU_DISPLAY);
+                }
             }
             else
             {
