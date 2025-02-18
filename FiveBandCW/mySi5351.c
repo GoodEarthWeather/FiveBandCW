@@ -44,7 +44,8 @@
 #define RXOFFSET 608
 //#define XTAL_FREQ 24998855  // for first bench prototype
 
-#define XTAL_FREQ 24998694   // for field radio 1.0  23-dec-2024
+//#define XTAL_FREQ 24998694   // for field radio 1.0  23-dec-2024
+#define XTAL_FREQ 24998838   // for field radio 1.1  24-feb-2025
 
 ////////////////////////////////
 //
