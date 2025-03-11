@@ -40,6 +40,8 @@ int main(void) {
     initSideToneTimer();
     nvsVarInitialize();
     nvsVarRead();  // read nvs variables into nvsVar
+    cwMemInitialize();
+    cwMemRead();  // read cw memory into cwMem
     wpm = nvsVar.cwSpeed;
     qskDelay = nvsVar.qsk;
     paddleOrientation = nvsVar.paddleConfig;
@@ -96,7 +98,14 @@ int main(void) {
         {
             keyStateChanged = 0;
             // sidetone
-            (txKeyState == TX_KEY_DOWN) ?(Timer_A_startCounter(TIMER_A0_BASE,TIMER_A_UP_MODE)) : (Timer_A_stop(TIMER_A0_BASE));  //start sidetone timer
+            //(txKeyState == TX_KEY_DOWN) ?(Timer_A_startCounter(TIMER_A0_BASE,TIMER_A_UP_MODE)) : (Timer_A_stop(TIMER_A0_BASE));  //start sidetone timer
+            if (txKeyState == TX_KEY_DOWN)
+                Timer_A_startCounter(TIMER_A0_BASE,TIMER_A_UP_MODE);
+            else
+            {
+                Timer_A_stop(TIMER_A0_BASE);
+                Timer_A_setOutputForOutputModeOutBitValue(TIMER_A0_BASE,TIMER_A_CAPTURECOMPARE_REGISTER_1,TIMER_A_OUTPUTMODE_OUTBITVALUE_LOW);
+            }
             if (txMode == ENABLED)  // transmitter is enabled
             {
                 selectAudioState(MUTE);
@@ -196,6 +205,7 @@ int main(void) {
                 else
                 {
                     Timer_A_stop(TIMER_A0_BASE);  // stop side tone
+                    Timer_A_setOutputForOutputModeOutBitValue(TIMER_A0_BASE,TIMER_A_CAPTURECOMPARE_REGISTER_1,TIMER_A_OUTPUTMODE_OUTBITVALUE_LOW);
                     spotMode = DISABLED;
                 }
             }

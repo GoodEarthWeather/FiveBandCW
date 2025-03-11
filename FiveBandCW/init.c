@@ -275,6 +275,7 @@ void initSideToneTimer(void)
     initUpParam.timerPeriod = (uint16_t)(26);
     Timer_A_initUpMode(TIMER_A0_BASE, &initUpParam);
     Timer_A_setOutputMode(TIMER_A0_BASE,TIMER_A_CAPTURECOMPARE_REGISTER_1,TIMER_A_OUTPUTMODE_TOGGLE);
+    Timer_A_setOutputForOutputModeOutBitValue(TIMER_A0_BASE,TIMER_A_CAPTURECOMPARE_REGISTER_1,TIMER_A_OUTPUTMODE_OUTBITVALUE_LOW);
 
     //Initiaze compare mode
     Timer_A_clearCaptureCompareInterrupt(TIMER_A0_BASE,

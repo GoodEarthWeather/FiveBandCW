@@ -29,7 +29,8 @@
 
 
 // Initial application configuration
-const nvsVariables_t nvsVarInit = {
+nvsVariables_t nvsVarInit = {
+//const nvsVariables_t nvsVarInit = {
     .cwSpeed = 18,
     .qsk = 300,
     .paddleConfig = PADDLE_DAH_DIT
@@ -37,18 +38,22 @@ const nvsVariables_t nvsVarInit = {
 
 // NVS data handle
 nvs_data_handle nvsHandle;
+nvs_data_handle cwMemHandle;
 
 // Allocate NVS container inside INFO memory to store application configuration
 #if defined(__TI_COMPILER_VERSION__)
 //#pragma DATA_SECTION(nvsStorage, ".infoA")
 #pragma PERSISTENT(nvsStorage)
+#pragma PERSISTENT(cwMemStorage)
 #elif defined(__IAR_SYSTEMS_ICC__)
 #pragma location="INFOA"
 __no_init
 #endif
 uint8_t nvsStorage[NVS_DATA_STORAGE_SIZE(sizeof(nvsVariables_t))] = {0};
+uint8_t cwMemStorage[NVS_DATA_STORAGE_SIZE(sizeof(cwMem_t))] = {0};
 
 extern nvsVariables_t nvsVar;  // create structure nvsVar of type struct nvsVariables to hold nvs data
+extern cwMem_t cwMem;  // structure to hold cw memories
 
 // This function will initialize the nvs memory if empty
 void nvsVarInitialize(void)
@@ -69,6 +74,38 @@ void nvsVarInitialize(void)
 
         // Update NVS container with initial application configuration.
         status = nvs_data_commit(nvsHandle, &nvsVar);
+
+        //
+         // Status should never be not NVS_OK but if it happens trap execution.
+         // Potential reason for NVS_NOK:
+         //     1. nvsStorage not initialized
+         //    2. nvsStorage got corrupted by other task (buffer overflow?)
+         //
+        if (status != NVS_OK) {
+            while (1);
+        }
+        break;
+    }
+}
+// This function will initialize the nvs memory if empty
+void cwMemInitialize(void)
+{
+    uint16_t status;
+
+    // Check integrity of NVS container and initialize if required
+    nvsHandle = nvs_data_init(nvsStorage, sizeof(cwMem_t));
+
+    // Retrieve application configuration
+    status = nvs_data_restore(nvsHandle, &cwMem);
+
+    switch (status) {
+    case NVS_OK: break;
+    case NVS_EMPTY:
+        // Initialize local application configuration.
+        memcpy(&nvsVar, &nvsVarInit, sizeof(nvsVariables_t));
+
+        // Update NVS container with initial application configuration.
+        status = nvs_data_commit(nvsHandle, &cwMem);
 
         //
          // Status should never be not NVS_OK but if it happens trap execution.
@@ -108,6 +145,30 @@ void nvsVarWrite(void)  // this will write the values of the variable in nvs
     }
 }
 
+void cwMemWrite(void)  // this will write the values of the variable in nvs
+{
+    uint16_t status;
+
+    // Check integrity of NVS container and initialize if required
+    nvsHandle = nvs_data_init(nvsStorage, sizeof(cwMem_t));
+
+
+    /*
+     * Update NVS container with application configuration. In case of a reset
+     * the application will resume with this state.
+     */
+    status = nvs_data_commit(nvsHandle, &cwMem);
+
+    /*
+     * Status should never be not NVS_OK but if it happens trap execution.
+     * Potential reason for NVS_NOK:
+     *     1. nvsStorage not initialized
+     *     2. nvsStorage got corrupted by other task (buffer overflow?)
+     */
+    if (status != NVS_OK) {
+        while (1);
+    }
+}
 
 void nvsVarRead(void)  // this will read the values of the variable in nvs
 {
@@ -122,6 +183,31 @@ void nvsVarRead(void)  // this will read the values of the variable in nvs
      * the application will resume with this state.
      */
     status = nvs_data_restore(nvsHandle, &nvsVar);
+
+    /*
+     * Status should never be not NVS_OK but if it happens trap execution.
+     * Potential reason for NVS_NOK:
+     *     1. nvsStorage not initialized
+     *     2. nvsStorage got corrupted by other task (buffer overflow?)
+     */
+    if (status != NVS_OK) {
+        while (1);
+    }
+}
+
+void cwMemRead(void)  // this will read the values of the variable in nvs
+{
+    uint16_t status;
+
+    // Check integrity of NVS container and initialize if required
+    nvsHandle = nvs_data_init(nvsStorage, sizeof(cwMem_t));
+
+
+    /*
+     * Update NVS container with application configuration. In case of a reset
+     * the application will resume with this state.
+     */
+    status = nvs_data_restore(nvsHandle, &cwMem);
 
     /*
      * Status should never be not NVS_OK but if it happens trap execution.

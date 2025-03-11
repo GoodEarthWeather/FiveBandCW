@@ -35,8 +35,6 @@ void ditdah(uint8_t key)
             ditKeyState = GPIO_getInputPinValue(DAH_KEY);
             dahKeyState = GPIO_getInputPinValue(DIT_KEY);
         }
-        //ditKeyState = GPIO_getInputPinValue(DIT_KEY);
-        //dahKeyState = GPIO_getInputPinValue(DAH_KEY);
         // iambic test
         if ( (dahKeyState == GPIO_INPUT_PIN_LOW) && (ditKeyState == GPIO_INPUT_PIN_LOW) )  // iambic mode, so alternate dit/dah
         {
@@ -72,6 +70,7 @@ void ditdah(uint8_t key)
         if (txMode == ENABLED)
             keyUp();
         Timer_A_stop(TIMER_A0_BASE);  // stop side tone
+        Timer_A_clear(TIMER_A2_BASE);  // clear timer
         Timer_A_clearCaptureCompareInterrupt(TIMER_A2_BASE, TIMER_A_CAPTURECOMPARE_REGISTER_0);
         do {
             done = Timer_A_getCaptureCompareInterruptStatus(TIMER_A2_BASE,TIMER_A_CAPTURECOMPARE_REGISTER_0,TIMER_A_CAPTURECOMPARE_INTERRUPT_FLAG);
@@ -86,10 +85,6 @@ void ditdah(uint8_t key)
             ditKeyState = GPIO_getInputPinValue(DAH_KEY);
             dahKeyState = GPIO_getInputPinValue(DIT_KEY);
         }
-
-        //ditKeyState = GPIO_getInputPinValue(DIT_KEY);
-        //dahKeyState = GPIO_getInputPinValue(DAH_KEY);
-
         if ((key == DIT) && (ditKeyState == GPIO_INPUT_PIN_HIGH))
             break;
         if ((key == DAH) && (dahKeyState == GPIO_INPUT_PIN_HIGH))
@@ -146,28 +141,12 @@ void setTuneMode(void)
         {
             keyDown();
             Timer_A_startCounter(TIMER_A0_BASE,TIMER_A_UP_MODE);  // start side tone
-            /*
-            selectAudioState(MUTE);
-            setTRSwitch(TRANSMIT);
-            Timer_A_startCounter(TIMER_A0_BASE,TIMER_A_UP_MODE);  // start side tone
-            GPIO_setOutputHighOnPin(CW_OUT);
-            txKeyState = TX_KEY_DOWN;
-            si5351_RXTX_enable();
-            */
         }
         else
         {
             keyUp();
             Timer_A_stop(TIMER_A0_BASE);  // stop side tone
-            /*
-            txKeyState = TX_KEY_UP;
-            GPIO_setOutputLowOnPin(CW_OUT);
-            Timer_A_stop(TIMER_A0_BASE);  // stop side tone
-            delay_ms(5);
-            setTRSwitch(RECEIVE);
-            si5351_RXTX_enable();
-            selectAudioState(UNMUTE);
-            */
+            Timer_A_setOutputForOutputModeOutBitValue(TIMER_A0_BASE,TIMER_A_CAPTURECOMPARE_REGISTER_1,TIMER_A_OUTPUTMODE_OUTBITVALUE_LOW);
         }
     }
 }
