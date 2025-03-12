@@ -38,11 +38,9 @@ void setTRSwitch(uint8_t);
 void nvsVarInitialize(void);
 void nvsVarRead(void);
 void nvsVarWrite(void);
-//void cwMemInitialize(void);
-//void cwMemRead(void);
-//void cwMemWrite(void);
-//uint8_t *ditdah_record(uint8_t, uint8_t *);
-//uint8_t *recordCWMessage(uint8_t *);
+void cwMemInitialize(void);
+void cwMemRead(void);
+void cwMemWrite(void);
 void initCWMsgRecordTimer(void);
 void initCWMsgPlayTimer(void);
 void playCwMsg(void);
@@ -208,9 +206,7 @@ typedef struct {
 } nvsVariables_t;
 
 typedef struct {
-    uint16_t mem1[512];
-    uint16_t mem2[512];
-    uint16_t mem3[512];
+    uint16_t mem[512];
 } cwMem_t;
 
 #endif /* MYINCLUDE_MAIN_H_ */

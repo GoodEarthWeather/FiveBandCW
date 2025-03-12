@@ -57,9 +57,16 @@ void ditdah(uint8_t key)
         if (cwMsgState == RECORD)
         {
             Timer_A_stop(TIMER_A3_BASE);  // stop cw msg timer
-            *cwMemPtr++ = Timer_A_getCounterValue(TIMER_A3_BASE);
+            if (Timer_A_getInterruptStatus(TIMER_A3_BASE) == TIMER_A_INTERRUPT_PENDING)
+            {
+                // timer overflow - limit delay to max (2 seconds)
+                *cwMemPtr++ = 0xFFFF;
+                Timer_A_clearTimerInterrupt(TIMER_A3_BASE);
+            } else {
+                *cwMemPtr++ = Timer_A_getCounterValue(TIMER_A3_BASE);
+            }
             Timer_A_clear(TIMER_A3_BASE);  // clear timer
-            Timer_A_startCounter(TIMER_A3_BASE,TIMER_A_CONTINUOUS_MODE);
+            Timer_A_startCounter(TIMER_A3_BASE,TIMER_A_CONTINUOUS_MODE);  // start measuring keyDown time
         }
 
         // if transmitter enabled, turn on
@@ -91,7 +98,7 @@ void ditdah(uint8_t key)
             Timer_A_stop(TIMER_A3_BASE);  // stop cw msg timer
             *cwMemPtr++ = Timer_A_getCounterValue(TIMER_A3_BASE);
             Timer_A_clear(TIMER_A3_BASE);  // clear timer
-            Timer_A_startCounter(TIMER_A3_BASE,TIMER_A_CONTINUOUS_MODE);
+            Timer_A_startCounter(TIMER_A3_BASE,TIMER_A_CONTINUOUS_MODE);  // start measuring keyUp time
         }
 
         // Wait one dit time
@@ -192,6 +199,7 @@ void playCwMsg(void)
     extern uint16_t *cwMemPtr;
     extern uint16_t cwMsg[];
     extern uint8_t txMode;
+    extern uint8_t volatile buttonPressed;
     uint16_t count;
     uint8_t done;
     uint8_t on = 0;  // initialize to off = no sidetone and keyUp
@@ -202,7 +210,7 @@ void playCwMsg(void)
     // configure message timer (A3)
     initCWMsgPlayTimer();
 
-    while ( count = *cwMemPtr++ )
+    while ( (count = *cwMemPtr++) && (buttonPressed == BTN_PRESSED_NONE) )
     {
         on = !on;  // switch to on or off
         Timer_A_clear(TIMER_A3_BASE);  // clear timer
@@ -225,4 +233,5 @@ void playCwMsg(void)
                 keyUp();
         }
     }
+    buttonPressed = BTN_PRESSED_NONE;  // if playback was interrupted by keypress, ignore the key that was pressed
 }

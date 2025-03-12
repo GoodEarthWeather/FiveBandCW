@@ -27,8 +27,8 @@ uint8_t tuneMode; // for when tune button is pressed
 uint8_t paddleOrientation;  // paddles configured for dah-dit or dit-dah
 nvsVariables_t nvsVar;  // create structure nvsVar of type struct nvsVariables to hold nvs data
 uint8_t cwMsgState;  // either disabled, recording or playing
-uint16_t cwMsg[512];  // to hold cw message
-uint16_t *cwMemPtr = cwMsg;
+cwMem_t cwMsg;  // vector to hold cw message
+uint16_t *cwMemPtr = cwMsg.mem;
 
 
 int main(void) {
@@ -44,8 +44,8 @@ int main(void) {
     initCWMsgRecordTimer();
     nvsVarInitialize();
     nvsVarRead();  // read nvs variables into nvsVar
-    //cwMemInitialize();
-    //cwMemRead();  // read cw memory into cwMem
+    cwMemInitialize();
+    cwMemRead();  // read cw memory into cwMem
     wpm = nvsVar.cwSpeed;
     qskDelay = nvsVar.qsk;
     paddleOrientation = nvsVar.paddleConfig;
@@ -274,6 +274,9 @@ int main(void) {
         case BTN_PRESSED_MEMORY :
             buttonPressed = BTN_PRESSED_NONE;
             playCwMsg();
+            // temporary - write cw message into nvs memory
+            *cwMemPtr = 0; // put a zero at the end of the message
+            cwMemWrite();
             break;
         default :
             break;
