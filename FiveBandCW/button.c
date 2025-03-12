@@ -69,7 +69,11 @@ __interrupt void Port_5(void)
       case  0: break;                         // Vector  0:  No interrupt
       case  2: break;                         // Vector  2:  Port 5 Bit 0
       case  4: break;                         // Vector  4:  Port 5 Bit 1
-      case  6: break;                         // Vector  6:  Port 5 Bit 2
+      case  6:
+          // P5.2 = Memory button
+          buttonPressed = BTN_PRESSED_MEMORY;
+          GPIO_clearInterrupt(BTN_MEMORY);
+          break;                         // Vector  6:  Port 5 Bit 2
       case  8: break;                         // Vector  8:  Port 5 Bit 3
       case  10: break;                         // Vector  10:  Port 5 Bit 4
       case  12: break;                         // Vector  12:  Port 5 Bit 5

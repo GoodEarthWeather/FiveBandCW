@@ -23,9 +23,12 @@ void ditdah(uint8_t key)
     uint8_t dahKeyState;
     extern uint8_t txMode;
     extern uint8_t paddleOrientation;  // paddles configured for dah-dit or dit-dah
+    extern uint8_t cwMsgState;  // indicates if recording cw message
+    extern uint16_t *cwMemPtr;
 
     iambicMode = DISABLED;
 
+    //  Determine state of dit and dah keys
     do {
         if (paddleOrientation == PADDLE_DAH_DIT){
             ditKeyState = GPIO_getInputPinValue(DIT_KEY);
@@ -46,16 +49,28 @@ void ditdah(uint8_t key)
             (dahKeyState == GPIO_INPUT_PIN_LOW) ? (key = DAH) : (key = DIT);
             // end of iambic test
         }
-
         if ((ditKeyState == GPIO_INPUT_PIN_HIGH) && (dahKeyState == GPIO_INPUT_PIN_HIGH))
             break;
 
+        // Now start the sidetone and, if needed, cw message timer
         Timer_A_startCounter(TIMER_A0_BASE,TIMER_A_UP_MODE);  // start side tone
+        if (cwMsgState == RECORD)
+        {
+            Timer_A_stop(TIMER_A3_BASE);  // stop cw msg timer
+            *cwMemPtr++ = Timer_A_getCounterValue(TIMER_A3_BASE);
+            Timer_A_clear(TIMER_A3_BASE);  // clear timer
+            Timer_A_startCounter(TIMER_A3_BASE,TIMER_A_CONTINUOUS_MODE);
+        }
+
         // if transmitter enabled, turn on
         if (txMode == ENABLED)
             keyDown();
+
+        // Prepare dit dah timer
         Timer_A_clearCaptureCompareInterrupt(TIMER_A2_BASE, TIMER_A_CAPTURECOMPARE_REGISTER_0);
         Timer_A_clear(TIMER_A2_BASE);  // clear timer
+
+        // Start dit/dah delay timer
         count = 0;
         while (count < key)
         {
@@ -66,17 +81,28 @@ void ditdah(uint8_t key)
                 Timer_A_clearCaptureCompareInterrupt(TIMER_A2_BASE, TIMER_A_CAPTURECOMPARE_REGISTER_0);
             }
         }
-        //  wait one unit
+
+        //  stop transmission (if enabled) and stop side tone and cw message timer if needed
         if (txMode == ENABLED)
             keyUp();
         Timer_A_stop(TIMER_A0_BASE);  // stop side tone
-        Timer_A_clear(TIMER_A2_BASE);  // clear timer
+        if (cwMsgState == RECORD)
+        {
+            Timer_A_stop(TIMER_A3_BASE);  // stop cw msg timer
+            *cwMemPtr++ = Timer_A_getCounterValue(TIMER_A3_BASE);
+            Timer_A_clear(TIMER_A3_BASE);  // clear timer
+            Timer_A_startCounter(TIMER_A3_BASE,TIMER_A_CONTINUOUS_MODE);
+        }
+
+        // Wait one dit time
+        Timer_A_clear(TIMER_A2_BASE);  // clear dit/dah timer
         Timer_A_clearCaptureCompareInterrupt(TIMER_A2_BASE, TIMER_A_CAPTURECOMPARE_REGISTER_0);
         do {
             done = Timer_A_getCaptureCompareInterruptStatus(TIMER_A2_BASE,TIMER_A_CAPTURECOMPARE_REGISTER_0,TIMER_A_CAPTURECOMPARE_INTERRUPT_FLAG);
         } while (done != TIMER_A_CAPTURECOMPARE_INTERRUPT_FLAG);
         Timer_A_clearCaptureCompareInterrupt(TIMER_A2_BASE, TIMER_A_CAPTURECOMPARE_REGISTER_0);
 
+        // check state of dit/dah keys - if one of keys is pressed, loop back and repeat
         if (paddleOrientation == PADDLE_DAH_DIT){
             ditKeyState = GPIO_getInputPinValue(DIT_KEY);
             dahKeyState = GPIO_getInputPinValue(DAH_KEY);
@@ -158,4 +184,45 @@ void setTRSwitch(uint8_t state)
         GPIO_setOutputHighOnPin(TR_SWITCH); // receive mode
     else if (state == TRANSMIT)
         GPIO_setOutputLowOnPin(TR_SWITCH); // transmit mode
+}
+
+// This routine will play the cw message in the cwMsg[] vector
+void playCwMsg(void)
+{
+    extern uint16_t *cwMemPtr;
+    extern uint16_t cwMsg[];
+    extern uint8_t txMode;
+    uint16_t count;
+    uint8_t done;
+    uint8_t on = 0;  // initialize to off = no sidetone and keyUp
+
+    cwMemPtr = cwMsg;  // set pointer to memory vector
+    cwMemPtr++;  // skip the 0 in the first location
+
+    // configure message timer (A3)
+    initCWMsgPlayTimer();
+
+    while ( count = *cwMemPtr++ )
+    {
+        on = !on;  // switch to on or off
+        Timer_A_clear(TIMER_A3_BASE);  // clear timer
+        Timer_A_setCompareValue (TIMER_A3_BASE, TIMER_A_CAPTURECOMPARE_REGISTER_0, count);
+        if (on)
+        {
+            Timer_A_startCounter(TIMER_A0_BASE,TIMER_A_UP_MODE);  // start side tone
+            if (txMode == ENABLED)
+                keyDown();
+        }
+        Timer_A_startCounter(TIMER_A3_BASE,TIMER_A_UP_MODE);
+        do {
+            done = Timer_A_getCaptureCompareInterruptStatus(TIMER_A3_BASE,TIMER_A_CAPTURECOMPARE_REGISTER_0,TIMER_A_CAPTURECOMPARE_INTERRUPT_FLAG);
+        } while (done != TIMER_A_CAPTURECOMPARE_INTERRUPT_FLAG);
+        Timer_A_clearCaptureCompareInterrupt(TIMER_A3_BASE, TIMER_A_CAPTURECOMPARE_REGISTER_0);
+        if (on)
+        {
+            Timer_A_stop(TIMER_A0_BASE);  // stop side tone
+            if (txMode == ENABLED)
+                keyUp();
+        }
+    }
 }

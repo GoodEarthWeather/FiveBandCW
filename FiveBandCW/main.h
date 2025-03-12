@@ -38,11 +38,14 @@ void setTRSwitch(uint8_t);
 void nvsVarInitialize(void);
 void nvsVarRead(void);
 void nvsVarWrite(void);
-void cwMemInitialize(void);
-void cwMemRead(void);
-void cwMemWrite(void);
-uint8_t *ditdah_record(uint8_t, uint8_t *);
-uint8_t *recordCWMessage(uint8_t *);
+//void cwMemInitialize(void);
+//void cwMemRead(void);
+//void cwMemWrite(void);
+//uint8_t *ditdah_record(uint8_t, uint8_t *);
+//uint8_t *recordCWMessage(uint8_t *);
+void initCWMsgRecordTimer(void);
+void initCWMsgPlayTimer(void);
+void playCwMsg(void);
 
 
 void i2cSendRegister(uint8_t reg, uint8_t data);
@@ -81,6 +84,8 @@ void initsi5351(void);
 
 #define ENABLED 1
 #define DISABLED 0
+#define RECORD 1
+#define PLAY 2
 
 // Define all I/O
 #define ENCODER_A GPIO_PORT_P4, GPIO_PIN5
@@ -99,6 +104,7 @@ void initsi5351(void);
 #define BTN_SPOT GPIO_PORT_P2, GPIO_PIN4
 #define BTN_RXMODE GPIO_PORT_P3, GPIO_PIN7
 #define BTN_MENU GPIO_PORT_P4, GPIO_PIN0
+#define BTN_MEMORY GPIO_PORT_P5, GPIO_PIN2
 #define DIT_KEY GPIO_PORT_P4, GPIO_PIN1
 #define DAH_KEY GPIO_PORT_P4, GPIO_PIN2
 #define STRAIGHT_KEY GPIO_PORT_P2, GPIO_PIN7
@@ -141,6 +147,7 @@ void initsi5351(void);
 #define BTN_PRESSED_ENCODER 0x9
 #define BTN_PRESSED_DIT 0xA
 #define BTN_PRESSED_DAH 0xB
+#define BTN_PRESSED_MEMORY 0xC
 
 // define bands
 #define BAND_40M 0x0
@@ -201,9 +208,9 @@ typedef struct {
 } nvsVariables_t;
 
 typedef struct {
-    uint8_t mem1[256];
-    uint8_t mem2[256];
-    uint8_t mem3[256];
+    uint16_t mem1[512];
+    uint16_t mem2[512];
+    uint16_t mem3[512];
 } cwMem_t;
 
 #endif /* MYINCLUDE_MAIN_H_ */
