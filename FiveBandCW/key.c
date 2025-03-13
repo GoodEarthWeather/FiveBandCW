@@ -194,7 +194,7 @@ void setTRSwitch(uint8_t state)
 }
 
 // This routine will play the cw message in the cwMsg[] vector
-void playCwMsg(void)
+void playCwMsg(uint8_t mem)
 {
     extern uint16_t *cwMemPtr;
     extern cwMem_t cwMsg;
@@ -204,6 +204,9 @@ void playCwMsg(void)
     uint16_t count;
     uint8_t done;
     uint8_t on = 0;
+
+    // copy message from nvs memory to cwMsg.mem
+    cwMemRead(mem);
 
     // wait until a dit or dah or memory button is pressed
     // a dit or dah will initiate sending the memory message
@@ -247,7 +250,7 @@ void playCwMsg(void)
     } while (buttonPressed != BTN_PRESSED_MEMORY);
 }
 
-void recordCwMsg(void)
+void recordCwMsg(uint8_t mem)
 {
     extern uint8_t volatile buttonPressed;
     extern uint8_t paddleOrientation;  // paddles configured for dah-dit or dit-dah
@@ -273,6 +276,6 @@ void recordCwMsg(void)
         }
     }
     *cwMemPtr = 0; // put a zero at the end of the message
-    cwMemWrite();  // save message into nvs
+    cwMemWrite(mem);  // save message into nvs
     buttonPressed = BTN_PRESSED_NONE;
 }

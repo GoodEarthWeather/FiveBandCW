@@ -46,7 +46,6 @@ int main(void) {
     nvsVarInitialize();
     nvsVarRead();  // read nvs variables into nvsVar
     cwMemInitialize();
-    cwMemRead();  // read cw memory into cwMem
     wpm = nvsVar.cwSpeed;
     qskDelay = nvsVar.qsk;
     paddleOrientation = nvsVar.paddleConfig;
@@ -132,7 +131,7 @@ int main(void) {
             }
         }
 
-        // check encoder
+        // check encoder rotation
         if ((encoderCWCount != 0) || (encoderCCWCount != 0))  // if true, the encoder knob was turned
         {
             if (selectedMenuFunction == MENU_FUNCTION_QSK_DELAY)
@@ -254,7 +253,13 @@ int main(void) {
             buttonPressed = BTN_PRESSED_NONE;
             break;
         case BTN_PRESSED_MENU :
-            (selectedMenuFunction == MENU_FUNCTION_RECORD_MEMORY) ? (selectedMenuFunction = MENU_FUNCTION_BATVOLTAGE) : (selectedMenuFunction++);
+            if (selectedMenuFunction == MENU_FUNCTION_RECORD_MEMORY)
+            {
+                selectedMenuFunction = MENU_FUNCTION_BATVOLTAGE;  // put menu back to voltage
+                selectedMem = MEM1;  // put selected memory to MEM1
+            } else {
+                selectedMenuFunction++;
+            }
             selectMenuFunction();
             buttonPressed = BTN_PRESSED_NONE;
             break;
@@ -268,7 +273,7 @@ int main(void) {
             {
               buttonPressed = BTN_PRESSED_NONE;
               cwMsgState = RECORD;
-              recordCwMsg();
+              recordCwMsg(selectedMem);
               cwMsgState = DISABLED;
             }
             else {
@@ -297,9 +302,8 @@ int main(void) {
                 break;
             }
             updateDisplay(PLAY_MEM_DISPLAY);
-            // need to copy the selected mem from nvs to cwMsg.mem
             cwMsgState = PLAY;
-            playCwMsg();
+            playCwMsg(selectedMem);
             cwMsgState = DISABLED;
             selectedMem++;
             break;

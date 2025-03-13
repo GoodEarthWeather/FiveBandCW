@@ -39,12 +39,12 @@ void nvsVarInitialize(void);
 void nvsVarRead(void);
 void nvsVarWrite(void);
 void cwMemInitialize(void);
-void cwMemRead(void);
-void cwMemWrite(void);
+void cwMemRead(uint8_t);
+void cwMemWrite(uint8_t);
 void initCWMsgRecordTimer(void);
 void initCWMsgPlayTimer(void);
-void playCwMsg(void);
-void recordCwMsg(void);
+void playCwMsg(uint8_t);
+void recordCwMsg(uint8_t);
 
 
 void i2cSendRegister(uint8_t reg, uint8_t data);
