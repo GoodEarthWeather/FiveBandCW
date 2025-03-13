@@ -44,6 +44,7 @@ void cwMemWrite(void);
 void initCWMsgRecordTimer(void);
 void initCWMsgPlayTimer(void);
 void playCwMsg(void);
+void recordCwMsg(void);
 
 
 void i2cSendRegister(uint8_t reg, uint8_t data);
@@ -159,6 +160,7 @@ void initsi5351(void);
 #define MENU_FUNCTION_CWSPEED 0x1
 #define MENU_FUNCTION_QSK_DELAY 0x2
 #define MENU_FUNCTION_PADDLE_ORIENTATION 0x3
+#define MENU_FUNCTION_RECORD_MEMORY 0x4
 
 #define MAX_QSK_DELAY 800   // 800 ms
 #define MIN_QSK_DELAY 5    // 5 ms
@@ -171,6 +173,11 @@ void initsi5351(void);
 #define CW_FILTER 0x1
 #define PADDLE_DAH_DIT 0x0
 #define PADDLE_DIT_DAH 0x1
+#define MEM0 0x0  // not used as memory - only for indexing
+#define MEM1 0x1
+#define MEM2 0x2
+#define MEM3 0x3
+#define MEM4 0x4  // not used as memory - used as flag to indicate end of mem list
 
 #define MUTE 0x1
 #define UNMUTE 0x0
@@ -188,6 +195,7 @@ void initsi5351(void);
 #define BAND_DISPLAY 0x2
 #define MENU_DISPLAY 0x3
 #define MODE_DISPLAY 0x4
+#define PLAY_MEM_DISPLAY 0x5
 
 #define RXMODE_CW 0x0
 #define RXMODE_USB 0x1

@@ -29,6 +29,7 @@ nvsVariables_t nvsVar;  // create structure nvsVar of type struct nvsVariables t
 uint8_t cwMsgState;  // either disabled, recording or playing
 cwMem_t cwMsg;  // vector to hold cw message
 uint16_t *cwMemPtr = cwMsg.mem;
+uint8_t selectedMem;  // selected cw message memory
 
 
 int main(void) {
@@ -49,6 +50,7 @@ int main(void) {
     wpm = nvsVar.cwSpeed;
     qskDelay = nvsVar.qsk;
     paddleOrientation = nvsVar.paddleConfig;
+    selectedMem = MEM1;
 
     initQSKTimer(qskDelay);  // initialize for 300ms delay
     initKeyTimer(wpm);  // initialize keyer timer for 18 WMP
@@ -77,7 +79,7 @@ int main(void) {
     selectFilter();
     selectSideband();
     selectMenuFunction();
-    cwMsgState = RECORD;
+    cwMsgState = DISABLED;
 
     updateDisplay(MODE_DISPLAY);
 
@@ -150,6 +152,12 @@ int main(void) {
                 encoderCWCount = encoderCCWCount = 0;
                 nvsVar.paddleConfig = paddleOrientation;
                 nvsVarWrite();
+            }
+            else if (selectedMenuFunction == MENU_FUNCTION_RECORD_MEMORY)
+            {
+                (selectedMem == MEM3) ? (selectedMem = MEM1) : (selectedMem++);
+                updateDisplay(MENU_DISPLAY);
+                encoderCWCount = encoderCCWCount = 0;
             }
             else
                 updateFrequency();
@@ -246,7 +254,7 @@ int main(void) {
             buttonPressed = BTN_PRESSED_NONE;
             break;
         case BTN_PRESSED_MENU :
-            (selectedMenuFunction == MENU_FUNCTION_PADDLE_ORIENTATION) ? (selectedMenuFunction = MENU_FUNCTION_BATVOLTAGE) : (selectedMenuFunction++);
+            (selectedMenuFunction == MENU_FUNCTION_RECORD_MEMORY) ? (selectedMenuFunction = MENU_FUNCTION_BATVOLTAGE) : (selectedMenuFunction++);
             selectMenuFunction();
             buttonPressed = BTN_PRESSED_NONE;
             break;
@@ -256,12 +264,21 @@ int main(void) {
             buttonPressed = BTN_PRESSED_NONE;
             break;
         case BTN_PRESSED_ENCODER :
-            (ritState == DISABLED) ? (ritState = ENABLED) : (ritState = DISABLED);
-            ritOffset = 0;
-            si5351_set_RX_freq(si5351FreqOut);  //put RX frequency back to same as TX freq.
-            freqMultiplier = 100;
-            updateDisplay(MENU_DISPLAY);
-            buttonPressed = BTN_PRESSED_NONE;
+            if (selectedMenuFunction == MENU_FUNCTION_RECORD_MEMORY)
+            {
+              buttonPressed = BTN_PRESSED_NONE;
+              cwMsgState = RECORD;
+              recordCwMsg();
+              cwMsgState = DISABLED;
+            }
+            else {
+                (ritState == DISABLED) ? (ritState = ENABLED) : (ritState = DISABLED);
+                ritOffset = 0;
+                si5351_set_RX_freq(si5351FreqOut);  //put RX frequency back to same as TX freq.
+                freqMultiplier = 100;
+                updateDisplay(MENU_DISPLAY);
+                buttonPressed = BTN_PRESSED_NONE;
+            }
             break;
         case BTN_PRESSED_DIT :
             buttonPressed = BTN_PRESSED_NONE;
@@ -273,10 +290,18 @@ int main(void) {
             break;
         case BTN_PRESSED_MEMORY :
             buttonPressed = BTN_PRESSED_NONE;
+            if (selectedMem == MEM4)
+            {
+                selectedMem = MEM1;
+                updateDisplay(MENU_DISPLAY);
+                break;
+            }
+            updateDisplay(PLAY_MEM_DISPLAY);
+            // need to copy the selected mem from nvs to cwMsg.mem
+            cwMsgState = PLAY;
             playCwMsg();
-            // temporary - write cw message into nvs memory
-            *cwMemPtr = 0; // put a zero at the end of the message
-            cwMemWrite();
+            cwMsgState = DISABLED;
+            selectedMem++;
             break;
         default :
             break;
@@ -414,6 +439,8 @@ void selectMenuFunction(void)
     case MENU_FUNCTION_QSK_DELAY :
         break;
     case MENU_FUNCTION_PADDLE_ORIENTATION :
+        break;
+    case MENU_FUNCTION_RECORD_MEMORY :
         break;
     default :
         break;

@@ -171,6 +171,7 @@ void updateDisplay(uint8_t field)
     extern uint8_t receiveMode;
     extern uint16_t qskDelay;
     extern uint8_t paddleOrientation;
+    extern uint8_t selectedMem;
     uint8_t i;
     float z;
     uint32_t batV;
@@ -286,6 +287,14 @@ void updateDisplay(uint8_t field)
                 lcdSetText("KEY: ",0,1);
                 (paddleOrientation == PADDLE_DAH_DIT) ? lcdSetText("DAH_DIT", 5,1) : lcdSetText("DIT_DAH", 5,1);
                 break;
+            case MENU_FUNCTION_RECORD_MEMORY :
+                if (selectedMem == MEM1)
+                    lcdSetText("RECORD MEM1",0,1);
+                else if (selectedMem == MEM2)
+                    lcdSetText("RECORD MEM2",0,1);
+                else
+                    lcdSetText("RECORD MEM3",0,1);
+                break;
             default :
                 break;
             }
@@ -301,6 +310,16 @@ void updateDisplay(uint8_t field)
             lcdSetText("USB",0xD,1);
         else
             lcdSetText("LSB",0xD,1);
+    }
+    else if (field == PLAY_MEM_DISPLAY)
+    {
+        lcdSetText("            ",0,1);
+        if (selectedMem == MEM1)
+            lcdSetText("PLAY MEM1",0,1);
+        else if (selectedMem == MEM2)
+            lcdSetText("PLAY MEM2",0,1);
+        else
+            lcdSetText("PLAY MEM3",0,1);
     }
     moveFreqCursor();
 }

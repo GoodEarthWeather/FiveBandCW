@@ -197,41 +197,82 @@ void setTRSwitch(uint8_t state)
 void playCwMsg(void)
 {
     extern uint16_t *cwMemPtr;
-    extern uint16_t cwMsg[];
+    extern cwMem_t cwMsg;
+    //extern uint16_t cwMsg[];
     extern uint8_t txMode;
     extern uint8_t volatile buttonPressed;
     uint16_t count;
     uint8_t done;
-    uint8_t on = 0;  // initialize to off = no sidetone and keyUp
+    uint8_t on = 0;
 
-    cwMemPtr = cwMsg;  // set pointer to memory vector
-    cwMemPtr++;  // skip the 0 in the first location
-
-    // configure message timer (A3)
-    initCWMsgPlayTimer();
-
-    while ( (count = *cwMemPtr++) && (buttonPressed == BTN_PRESSED_NONE) )
-    {
-        on = !on;  // switch to on or off
-        Timer_A_clear(TIMER_A3_BASE);  // clear timer
-        Timer_A_setCompareValue (TIMER_A3_BASE, TIMER_A_CAPTURECOMPARE_REGISTER_0, count);
-        if (on)
+    // wait until a dit or dah or memory button is pressed
+    // a dit or dah will initiate sending the memory message
+    // a memory button push will go to the next memory, or will exit back to normal display
+    do {
+        while ((buttonPressed != BTN_PRESSED_DIT) && (buttonPressed != BTN_PRESSED_DAH) && (buttonPressed != BTN_PRESSED_MEMORY)) {;}
+        if (buttonPressed != BTN_PRESSED_MEMORY)
         {
-            Timer_A_startCounter(TIMER_A0_BASE,TIMER_A_UP_MODE);  // start side tone
-            if (txMode == ENABLED)
-                keyDown();
+            buttonPressed = BTN_PRESSED_NONE;
+            cwMemPtr = cwMsg.mem;  // set pointer to beginning of memory vector
+            cwMemPtr++;  // skip the 0 in the first location
+
+            // configure message timer (A3)
+            initCWMsgPlayTimer();
+            on = 0;
+            while ( (count = *cwMemPtr++) && (buttonPressed == BTN_PRESSED_NONE) )
+            {
+                on = !on;  // switch to on or off
+                Timer_A_clear(TIMER_A3_BASE);  // clear timer
+                Timer_A_setCompareValue (TIMER_A3_BASE, TIMER_A_CAPTURECOMPARE_REGISTER_0, count);
+                if (on)
+                {
+                    Timer_A_startCounter(TIMER_A0_BASE,TIMER_A_UP_MODE);  // start side tone
+                    if (txMode == ENABLED)
+                        keyDown();
+                }
+                Timer_A_startCounter(TIMER_A3_BASE,TIMER_A_UP_MODE);
+                do {
+                    done = Timer_A_getCaptureCompareInterruptStatus(TIMER_A3_BASE,TIMER_A_CAPTURECOMPARE_REGISTER_0,TIMER_A_CAPTURECOMPARE_INTERRUPT_FLAG);
+                } while (done != TIMER_A_CAPTURECOMPARE_INTERRUPT_FLAG);
+                Timer_A_clearCaptureCompareInterrupt(TIMER_A3_BASE, TIMER_A_CAPTURECOMPARE_REGISTER_0);
+                if (on)
+                {
+                    Timer_A_stop(TIMER_A0_BASE);  // stop side tone
+                    if (txMode == ENABLED)
+                        keyUp();
+                }
+            }
+            buttonPressed = BTN_PRESSED_NONE;  // if playback was interrupted by keypress, ignore the key that was pressed
         }
-        Timer_A_startCounter(TIMER_A3_BASE,TIMER_A_UP_MODE);
-        do {
-            done = Timer_A_getCaptureCompareInterruptStatus(TIMER_A3_BASE,TIMER_A_CAPTURECOMPARE_REGISTER_0,TIMER_A_CAPTURECOMPARE_INTERRUPT_FLAG);
-        } while (done != TIMER_A_CAPTURECOMPARE_INTERRUPT_FLAG);
-        Timer_A_clearCaptureCompareInterrupt(TIMER_A3_BASE, TIMER_A_CAPTURECOMPARE_REGISTER_0);
-        if (on)
+    } while (buttonPressed != BTN_PRESSED_MEMORY);
+}
+
+void recordCwMsg(void)
+{
+    extern uint8_t volatile buttonPressed;
+    extern uint8_t paddleOrientation;  // paddles configured for dah-dit or dit-dah
+    extern uint8_t cwMsgState;  // either disabled, recording or playing
+    extern cwMem_t cwMsg;
+    extern uint16_t *cwMemPtr;
+
+    cwMemPtr = cwMsg.mem;  // reset pointer to start of vector
+    while ( (buttonPressed != BTN_PRESSED_ENCODER) )
+    {
+        switch (buttonPressed)
         {
-            Timer_A_stop(TIMER_A0_BASE);  // stop side tone
-            if (txMode == ENABLED)
-                keyUp();
+        case BTN_PRESSED_DIT :
+            buttonPressed = BTN_PRESSED_NONE;
+            (paddleOrientation == PADDLE_DAH_DIT) ? ditdah(DIT) : ditdah(DAH);
+            break;
+        case BTN_PRESSED_DAH :
+            buttonPressed = BTN_PRESSED_NONE;
+            (paddleOrientation == PADDLE_DAH_DIT) ? ditdah(DAH) : ditdah(DIT);
+            break;
+        default :
+            break;
         }
     }
-    buttonPressed = BTN_PRESSED_NONE;  // if playback was interrupted by keypress, ignore the key that was pressed
+    *cwMemPtr = 0; // put a zero at the end of the message
+    cwMemWrite();  // save message into nvs
+    buttonPressed = BTN_PRESSED_NONE;
 }
