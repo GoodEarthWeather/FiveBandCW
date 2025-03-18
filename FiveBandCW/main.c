@@ -295,17 +295,10 @@ int main(void) {
             break;
         case BTN_PRESSED_MEMORY :
             buttonPressed = BTN_PRESSED_NONE;
-            if (selectedMem == MEM4)
-            {
-                selectedMem = MEM1;
-                updateDisplay(MENU_DISPLAY);
-                break;
-            }
             updateDisplay(PLAY_MEM_DISPLAY);
             cwMsgState = PLAY;
             playCwMsg(selectedMem);
             cwMsgState = DISABLED;
-            selectedMem++;
             break;
         default :
             break;

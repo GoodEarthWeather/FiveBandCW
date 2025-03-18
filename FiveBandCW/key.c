@@ -201,6 +201,7 @@ void playCwMsg(uint8_t mem)
     //extern uint16_t cwMsg[];
     extern uint8_t txMode;
     extern uint8_t volatile buttonPressed;
+    extern uint8_t selectedMem;  // selected cw message memory
     uint16_t count;
     uint8_t done;
     uint8_t on = 0;
@@ -211,43 +212,52 @@ void playCwMsg(uint8_t mem)
     // wait until a dit or dah or memory button is pressed
     // a dit or dah will initiate sending the memory message
     // a memory button push will go to the next memory, or will exit back to normal display
-    do {
-        while ((buttonPressed != BTN_PRESSED_DIT) && (buttonPressed != BTN_PRESSED_DAH) && (buttonPressed != BTN_PRESSED_MEMORY)) {;}
-        if (buttonPressed != BTN_PRESSED_MEMORY)
-        {
-            buttonPressed = BTN_PRESSED_NONE;
-            cwMemPtr = cwMsg.mem;  // set pointer to beginning of memory vector
-            cwMemPtr++;  // skip the 0 in the first location
+    while ((buttonPressed != BTN_PRESSED_DIT) && (buttonPressed != BTN_PRESSED_DAH) && (buttonPressed != BTN_PRESSED_MEMORY)) {;}
+    if (buttonPressed != BTN_PRESSED_MEMORY)
+    {
+        buttonPressed = BTN_PRESSED_NONE;
+        cwMemPtr = cwMsg.mem;  // set pointer to beginning of memory vector
+        cwMemPtr++;  // skip the 0 in the first location
 
-            // configure message timer (A3)
-            initCWMsgPlayTimer();
-            on = 0;
-            while ( (count = *cwMemPtr++) && (buttonPressed == BTN_PRESSED_NONE) )
+        // configure message timer (A3)
+        initCWMsgPlayTimer();
+        on = 0;
+        while ( (count = *cwMemPtr++) && (buttonPressed == BTN_PRESSED_NONE) )
+        {
+            on = !on;  // switch to on or off
+            Timer_A_clear(TIMER_A3_BASE);  // clear timer
+            Timer_A_setCompareValue (TIMER_A3_BASE, TIMER_A_CAPTURECOMPARE_REGISTER_0, count);
+            if (on)
             {
-                on = !on;  // switch to on or off
-                Timer_A_clear(TIMER_A3_BASE);  // clear timer
-                Timer_A_setCompareValue (TIMER_A3_BASE, TIMER_A_CAPTURECOMPARE_REGISTER_0, count);
-                if (on)
-                {
-                    Timer_A_startCounter(TIMER_A0_BASE,TIMER_A_UP_MODE);  // start side tone
-                    if (txMode == ENABLED)
-                        keyDown();
-                }
-                Timer_A_startCounter(TIMER_A3_BASE,TIMER_A_UP_MODE);
-                do {
-                    done = Timer_A_getCaptureCompareInterruptStatus(TIMER_A3_BASE,TIMER_A_CAPTURECOMPARE_REGISTER_0,TIMER_A_CAPTURECOMPARE_INTERRUPT_FLAG);
-                } while (done != TIMER_A_CAPTURECOMPARE_INTERRUPT_FLAG);
-                Timer_A_clearCaptureCompareInterrupt(TIMER_A3_BASE, TIMER_A_CAPTURECOMPARE_REGISTER_0);
-                if (on)
-                {
-                    Timer_A_stop(TIMER_A0_BASE);  // stop side tone
-                    if (txMode == ENABLED)
-                        keyUp();
-                }
+                Timer_A_startCounter(TIMER_A0_BASE,TIMER_A_UP_MODE);  // start side tone
+                if (txMode == ENABLED)
+                    keyDown();
             }
-            buttonPressed = BTN_PRESSED_NONE;  // if playback was interrupted by keypress, ignore the key that was pressed
+            Timer_A_startCounter(TIMER_A3_BASE,TIMER_A_UP_MODE);
+            do {
+                done = Timer_A_getCaptureCompareInterruptStatus(TIMER_A3_BASE,TIMER_A_CAPTURECOMPARE_REGISTER_0,TIMER_A_CAPTURECOMPARE_INTERRUPT_FLAG);
+            } while (done != TIMER_A_CAPTURECOMPARE_INTERRUPT_FLAG);
+            Timer_A_clearCaptureCompareInterrupt(TIMER_A3_BASE, TIMER_A_CAPTURECOMPARE_REGISTER_0);
+            if (on)
+            {
+                Timer_A_stop(TIMER_A0_BASE);  // stop side tone
+                if (txMode == ENABLED)
+                    keyUp();
+            }
         }
-    } while (buttonPressed != BTN_PRESSED_MEMORY);
+        buttonPressed = BTN_PRESSED_NONE;  // if playback was interrupted by keypress, ignore the key that was pressed
+        updateDisplay(MENU_DISPLAY);
+    } else {
+        if (selectedMem == MEM3)
+        {
+            selectedMem = MEM1;
+            updateDisplay(MENU_DISPLAY);
+            buttonPressed = BTN_PRESSED_NONE;
+        } else {
+        selectedMem++;
+        updateDisplay(PLAY_MEM_DISPLAY);
+        }
+    }
 }
 
 void recordCwMsg(uint8_t mem)
