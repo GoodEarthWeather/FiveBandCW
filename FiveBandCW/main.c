@@ -104,30 +104,10 @@ int main(void) {
         {
             keyStateChanged = 0;
             // sidetone
-            //(txKeyState == TX_KEY_DOWN) ?(Timer_A_startCounter(TIMER_A0_BASE,TIMER_A_UP_MODE)) : (Timer_A_stop(TIMER_A0_BASE));  //start sidetone timer
-            if (txKeyState == TX_KEY_DOWN)
-                Timer_A_startCounter(TIMER_A0_BASE,TIMER_A_UP_MODE);
-            else
-            {
-                Timer_A_stop(TIMER_A0_BASE);
-                Timer_A_setOutputForOutputModeOutBitValue(TIMER_A0_BASE,TIMER_A_CAPTURECOMPARE_REGISTER_1,TIMER_A_OUTPUTMODE_OUTBITVALUE_LOW);
-            }
+            (txKeyState == TX_KEY_DOWN) ?(Timer_A_startCounter(TIMER_A0_BASE,TIMER_A_UP_MODE)) : (Timer_A_stop(TIMER_A0_BASE));  //start sidetone timer
             if (txMode == ENABLED)  // transmitter is enabled
             {
-                selectAudioState(MUTE);
-                if (txKeyState == TX_KEY_DOWN)
-                {
-                    setTRSwitch(TRANSMIT);
-                    GPIO_setOutputHighOnPin(CW_OUT);
-                }
-                else  // txKeyState is TX_KEY_UP
-                {
-                    GPIO_setOutputLowOnPin(CW_OUT);
-                    Timer_A_clear(TIMER_A1_BASE);  // reset QSK timer
-                    Timer_A_startCounter( TIMER_A1_BASE,TIMER_A_CONTINUOUS_MODE);
-                    setTRSwitch(RECEIVE);
-                }
-                si5351_RXTX_enable();
+                (txKeyState == TX_KEY_DOWN) ? (keyDown()) : (keyUp());
             }
         }
 

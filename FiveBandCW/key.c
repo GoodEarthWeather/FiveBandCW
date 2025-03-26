@@ -10,8 +10,6 @@
 #include "lcdLib.h"
 
 uint8_t iambicMode;
-static void keyDown(void);
-static void keyUp(void);
 
 // This routine is to handle the dit and dah key
 // 'key' is either DIT or DAH (i.e. 1 or 3)
@@ -128,7 +126,7 @@ void ditdah(uint8_t key)
 }
 
 // This routine will start transmission
-static void keyDown(void)
+void keyDown(void)
 {
     extern uint8_t txKeyState;
 
@@ -146,7 +144,7 @@ static void keyDown(void)
 }
 
 // This routine will stop transmission
-static void keyUp(void)
+void keyUp(void)
 {
     extern uint8_t txKeyState;
 

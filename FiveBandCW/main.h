@@ -35,6 +35,8 @@ void updateCWSpeed(void);
 void ditdah(uint8_t);
 void setTuneMode(void);
 void setTRSwitch(uint8_t);
+void keyDown(void);
+void keyUp(void);
 void nvsVarInitialize(void);
 void nvsVarRead(void);
 void nvsVarWrite(void);
