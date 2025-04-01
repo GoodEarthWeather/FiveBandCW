@@ -33,6 +33,7 @@ void updateQSKDelay(void);
 void initKeyTimer(uint8_t);
 void updateCWSpeed(void);
 void ditdah(uint8_t);
+void ditdah_iambicB(uint8_t);
 void setTuneMode(void);
 void setTRSwitch(uint8_t);
 void keyDown(void);

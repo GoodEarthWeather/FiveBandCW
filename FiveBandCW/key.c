@@ -287,3 +287,213 @@ void recordCwMsg(uint8_t mem)
     cwMemWrite(mem);  // save message into nvs
     buttonPressed = BTN_PRESSED_NONE;
 }
+
+/**********************
+After completion of dit/dah:
+if iambic-A:
+    if dah was sent:
+        if dah is still pressed:
+            if dit is pressed:
+                send dit
+                back to top
+            else
+                send another dah
+                back to top
+        else if dit is pressed
+            send dit
+            back to top
+        else
+            exit function
+    if dit was sent:
+        if dit is still pressed:
+            if dah is pressed:
+                send dah
+                back to top
+            else
+                send another dit
+                back to top
+        else if dah is pressed
+            send dah
+            back to top
+        else
+            exit function
+else if iambic-B
+    if dah was sent:
+        if dah is still pressed:
+            if BTN_PRESSED_DIT is true OR dit key is low : (dit key was pressed at some point during dah)
+                set BTN_PRESSED_NONE
+                send dit
+                back to top
+            else
+                send another dah
+                back to top
+        else if BTN_PRESSED_DIT is true OR dit key is low: (dit key was pressed at some point during dah)
+            set BTN_PRESSED_NONE
+            send dit
+            back to top
+        else
+            exit function
+    if dit was sent:
+        if dit is still pressed:
+            if BTN_PRESSED_DAH is true OR dah key is low: (dah key was pressed at some point during dit)
+                set BTN_PRESSED_NONE
+                send dah
+                back to top
+            else
+                send another dit
+                back to top
+        else if BTN_PRESSED_DAH is true OR dah key is low: (dah key was pressed at some point during dit)
+            set BTN_PRESSED_NONE
+            send dah
+            back to top
+        else
+            exit function
+
+ */
+
+// This routine is to handle the dit and dah key
+// 'key' is either DIT or DAH (i.e. 1 or 3)
+// experimental version to re-write iambic
+void ditdah_iambicB(uint8_t key)
+{
+    uint8_t done;
+    uint8_t count;
+    uint8_t ditKeyState;
+    uint8_t dahKeyState;
+    extern uint8_t txMode;
+    extern uint8_t paddleOrientation;  // paddles configured for dah-dit or dit-dah
+    extern uint8_t cwMsgState;  // indicates if recording cw message
+    extern uint16_t *cwMemPtr;
+    extern uint8_t volatile buttonPressed;
+
+
+    //  Determine state of dit and dah keys
+    do {
+
+        // Now start the sidetone and, if needed, cw message timer
+        Timer_A_startCounter(TIMER_A0_BASE,TIMER_A_UP_MODE);  // start side tone
+        if (cwMsgState == RECORD)
+        {
+            Timer_A_stop(TIMER_A3_BASE);  // stop cw msg timer
+            if (Timer_A_getInterruptStatus(TIMER_A3_BASE) == TIMER_A_INTERRUPT_PENDING)
+            {
+                // timer overflow - limit delay to max (2 seconds)
+                *cwMemPtr++ = 0xFFFF;
+                Timer_A_clearTimerInterrupt(TIMER_A3_BASE);
+            } else {
+                *cwMemPtr++ = Timer_A_getCounterValue(TIMER_A3_BASE);
+            }
+            Timer_A_clear(TIMER_A3_BASE);  // clear timer
+            Timer_A_startCounter(TIMER_A3_BASE,TIMER_A_CONTINUOUS_MODE);  // start measuring keyDown time
+        }
+
+        // if transmitter enabled, turn on
+        if (txMode == ENABLED)
+            keyDown();
+
+        // Prepare dit dah timer
+        Timer_A_clearCaptureCompareInterrupt(TIMER_A2_BASE, TIMER_A_CAPTURECOMPARE_REGISTER_0);
+        Timer_A_clear(TIMER_A2_BASE);  // clear timer
+
+        // Start dit/dah delay timer
+        count = 0;
+        while (count < key)
+        {
+            done = Timer_A_getCaptureCompareInterruptStatus(TIMER_A2_BASE,TIMER_A_CAPTURECOMPARE_REGISTER_0,TIMER_A_CAPTURECOMPARE_INTERRUPT_FLAG);
+            if (done == TIMER_A_CAPTURECOMPARE_INTERRUPT_FLAG)
+            {
+                count++;
+                Timer_A_clearCaptureCompareInterrupt(TIMER_A2_BASE, TIMER_A_CAPTURECOMPARE_REGISTER_0);
+            }
+        }
+        //  stop transmission (if enabled) and stop side tone and cw message timer if needed
+        if (txMode == ENABLED)
+            keyUp();
+        Timer_A_stop(TIMER_A0_BASE);  // stop side tone
+        if (cwMsgState == RECORD)
+        {
+            Timer_A_stop(TIMER_A3_BASE);  // stop cw msg timer
+            *cwMemPtr++ = Timer_A_getCounterValue(TIMER_A3_BASE);
+            Timer_A_clear(TIMER_A3_BASE);  // clear timer
+            Timer_A_startCounter(TIMER_A3_BASE,TIMER_A_CONTINUOUS_MODE);  // start measuring keyUp time
+        }
+        // Wait one dit time
+        Timer_A_clear(TIMER_A2_BASE);  // clear dit/dah timer
+        Timer_A_clearCaptureCompareInterrupt(TIMER_A2_BASE, TIMER_A_CAPTURECOMPARE_REGISTER_0);
+        do {
+            done = Timer_A_getCaptureCompareInterruptStatus(TIMER_A2_BASE,TIMER_A_CAPTURECOMPARE_REGISTER_0,TIMER_A_CAPTURECOMPARE_INTERRUPT_FLAG);
+        } while (done != TIMER_A_CAPTURECOMPARE_INTERRUPT_FLAG);
+        Timer_A_clearCaptureCompareInterrupt(TIMER_A2_BASE, TIMER_A_CAPTURECOMPARE_REGISTER_0);
+
+        // completion of key sent; now determine what to do next
+        if (paddleOrientation == PADDLE_DAH_DIT){
+            ditKeyState = GPIO_getInputPinValue(DIT_KEY);
+            dahKeyState = GPIO_getInputPinValue(DAH_KEY);
+        }
+        else {
+            ditKeyState = GPIO_getInputPinValue(DAH_KEY);
+            dahKeyState = GPIO_getInputPinValue(DIT_KEY);
+        }
+
+        if (key == DAH)  // dah key was sent
+        {
+            if (dahKeyState == GPIO_INPUT_PIN_LOW)  // dah key still pressed
+            {
+                if (buttonPressed == BTN_PRESSED_DIT || ditKeyState == GPIO_INPUT_PIN_LOW)
+                {
+                    buttonPressed = BTN_PRESSED_NONE;
+                    key = DIT;
+                } else {
+                    key = DAH;
+                }
+            } else if (buttonPressed == BTN_PRESSED_DIT || ditKeyState == GPIO_INPUT_PIN_LOW) {  // dah key not pressed, but dit key was pressed
+                buttonPressed = BTN_PRESSED_NONE;
+                key = DIT;
+            }
+            else
+                break;
+        } else {  // dit key was sent
+            if (ditKeyState == GPIO_INPUT_PIN_LOW)  // dit key still pressed
+            {
+                if (buttonPressed == BTN_PRESSED_DAH || dahKeyState == GPIO_INPUT_PIN_LOW)
+                {
+                    buttonPressed = BTN_PRESSED_NONE;
+                    key = DAH;
+                } else {
+                    key = DIT;
+                }
+            } else if (buttonPressed == BTN_PRESSED_DAH || dahKeyState == GPIO_INPUT_PIN_LOW) {  // dit key not pressed, but dah key was pressed
+                buttonPressed = BTN_PRESSED_NONE;
+                key = DAH;
+            }
+            else
+                break;
+        }
+    } while (1);
+
+}
+/**********************************88
+// get state of keys
+ditKeyState = GPIO_getInputPinValue(ditKey);
+dahKeyState = GPIO_getInputPinValue(dahKey);
+
+// iambic test
+if ( (dahKeyState == GPIO_INPUT_PIN_LOW) && (ditKeyState == GPIO_INPUT_PIN_LOW) )  // keys are squeezed
+{
+    (key == DIT) ? (key = DAH) : (key = DIT);  // alternate
+} else {
+    (dahKeyState == GPIO_INPUT_PIN_LOW) ? (key = DAH) : (key = DIT);
+}
+if ((ditKeyState == GPIO_INPUT_PIN_HIGH) && (dahKeyState == GPIO_INPUT_PIN_HIGH))
+    break;
+
+// check state of dit/dah keys - if one of keys is pressed, loop back and repeat
+ditKeyState = GPIO_getInputPinValue(ditKey);
+dahKeyState = GPIO_getInputPinValue(dahKey);
+
+if ((key == DIT) && (ditKeyState == GPIO_INPUT_PIN_HIGH))
+    break;
+if ((key == DAH) && (dahKeyState == GPIO_INPUT_PIN_HIGH))
+    break;
+******************************/
+

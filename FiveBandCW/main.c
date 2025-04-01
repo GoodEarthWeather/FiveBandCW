@@ -267,11 +267,11 @@ int main(void) {
             break;
         case BTN_PRESSED_DIT :
             buttonPressed = BTN_PRESSED_NONE;
-            (paddleOrientation == PADDLE_DAH_DIT) ? ditdah(DIT) : ditdah(DAH);
+            (paddleOrientation == PADDLE_DAH_DIT) ? ditdah_iambicB(DIT) : ditdah_iambicB(DAH);
             break;
         case BTN_PRESSED_DAH :
             buttonPressed = BTN_PRESSED_NONE;
-            (paddleOrientation == PADDLE_DAH_DIT) ? ditdah(DAH) : ditdah(DIT);
+            (paddleOrientation == PADDLE_DAH_DIT) ? ditdah_iambicB(DAH) : ditdah_iambicB(DIT);
             break;
         case BTN_PRESSED_MEMORY :
             buttonPressed = BTN_PRESSED_NONE;
