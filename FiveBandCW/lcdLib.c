@@ -172,6 +172,7 @@ void updateDisplay(uint8_t field)
     extern uint16_t qskDelay;
     extern uint8_t paddleOrientation;
     extern uint8_t selectedMem;
+    extern uint8_t iambicMode;
     uint8_t i;
     float z;
     uint32_t batV;
@@ -294,6 +295,14 @@ void updateDisplay(uint8_t field)
                     lcdSetText("RECORD MEM2",0,1);
                 else
                     lcdSetText("RECORD MEM3",0,1);
+                break;
+            case MENU_FUNCTION_IAMBIC_MODE :
+                if (iambicMode == IAMBIC_MODE_A)
+                    lcdSetText("IAMBIC A",0,1);
+                else if (iambicMode == IAMBIC_MODE_B)
+                    lcdSetText("IAMBIC B",0,1);
+                else
+                    lcdSetText("ULTIMATIC",0,1);
                 break;
             default :
                 break;

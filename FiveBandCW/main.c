@@ -36,6 +36,7 @@ int main(void) {
 
 
     extern uint8_t volatile buttonPressed;
+    extern uint8_t iambicMode;
 
     WDT_A_hold(WDT_A_BASE);
     initGPIO();
@@ -49,6 +50,7 @@ int main(void) {
     wpm = nvsVar.cwSpeed;
     qskDelay = nvsVar.qsk;
     paddleOrientation = nvsVar.paddleConfig;
+    iambicMode = nvsVar.keyerMode;
     selectedMem = MEM1;
 
     initQSKTimer(qskDelay);  // initialize for 300ms delay
@@ -137,6 +139,14 @@ int main(void) {
                 (selectedMem == MEM3) ? (selectedMem = MEM1) : (selectedMem++);
                 updateDisplay(MENU_DISPLAY);
                 encoderCWCount = encoderCCWCount = 0;
+            }
+            else if (selectedMenuFunction == MENU_FUNCTION_IAMBIC_MODE)
+            {
+                (iambicMode == IAMBIC_MODE_ULTIMATIC) ? (iambicMode = IAMBIC_MODE_A) : (iambicMode++);
+                updateDisplay(MENU_DISPLAY);
+                encoderCWCount = encoderCCWCount = 0;
+                nvsVar.keyerMode = iambicMode;
+                nvsVarWrite();
             }
             else
                 updateFrequency();
@@ -233,7 +243,7 @@ int main(void) {
             buttonPressed = BTN_PRESSED_NONE;
             break;
         case BTN_PRESSED_MENU :
-            if (selectedMenuFunction == MENU_FUNCTION_RECORD_MEMORY)
+            if (selectedMenuFunction == MENU_FUNCTION_IAMBIC_MODE)
             {
                 selectedMenuFunction = MENU_FUNCTION_BATVOLTAGE;  // put menu back to voltage
                 selectedMem = MEM1;  // put selected memory to MEM1
@@ -267,11 +277,11 @@ int main(void) {
             break;
         case BTN_PRESSED_DIT :
             buttonPressed = BTN_PRESSED_NONE;
-            (paddleOrientation == PADDLE_DAH_DIT) ? ditdah_iambicB(DIT) : ditdah_iambicB(DAH);
+            (paddleOrientation == PADDLE_DAH_DIT) ? ditdah(DIT) : ditdah(DAH);
             break;
         case BTN_PRESSED_DAH :
             buttonPressed = BTN_PRESSED_NONE;
-            (paddleOrientation == PADDLE_DAH_DIT) ? ditdah_iambicB(DAH) : ditdah_iambicB(DIT);
+            (paddleOrientation == PADDLE_DAH_DIT) ? ditdah(DAH) : ditdah(DIT);
             break;
         case BTN_PRESSED_MEMORY :
             buttonPressed = BTN_PRESSED_NONE;

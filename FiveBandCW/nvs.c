@@ -33,7 +33,8 @@ nvsVariables_t nvsVarInit = {
 //const nvsVariables_t nvsVarInit = {
     .cwSpeed = 18,
     .qsk = 300,
-    .paddleConfig = PADDLE_DAH_DIT
+    .paddleConfig = PADDLE_DAH_DIT,
+    .keyerMode = IAMBIC_MODE_A
 };
 
 // NVS data handle

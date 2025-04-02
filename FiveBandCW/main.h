@@ -33,7 +33,6 @@ void updateQSKDelay(void);
 void initKeyTimer(uint8_t);
 void updateCWSpeed(void);
 void ditdah(uint8_t);
-void ditdah_iambicB(uint8_t);
 void setTuneMode(void);
 void setTRSwitch(uint8_t);
 void keyDown(void);
@@ -164,6 +163,7 @@ void initsi5351(void);
 #define MENU_FUNCTION_QSK_DELAY 0x2
 #define MENU_FUNCTION_PADDLE_ORIENTATION 0x3
 #define MENU_FUNCTION_RECORD_MEMORY 0x4
+#define MENU_FUNCTION_IAMBIC_MODE 0x5
 
 #define MAX_QSK_DELAY 800   // 800 ms
 #define MIN_QSK_DELAY 5    // 5 ms
@@ -187,6 +187,9 @@ void initsi5351(void);
 
 #define DIT 0x1
 #define DAH 0x3
+#define IAMBIC_MODE_A 0x0
+#define IAMBIC_MODE_B 0x1
+#define IAMBIC_MODE_ULTIMATIC 0x2
 
 #define TX_KEY_UP 0x0
 #define TX_KEY_DOWN 0x1
@@ -214,6 +217,7 @@ typedef struct {
     uint8_t cwSpeed;
     uint16_t qsk;
     uint8_t paddleConfig;
+    uint8_t keyerMode;
 } nvsVariables_t;
 
 typedef struct {
