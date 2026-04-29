@@ -333,6 +333,119 @@ void ditdah(uint8_t key)
         } else if (ditKeyState == GPIO_INPUT_PIN_HIGH && dahKeyState == GPIO_INPUT_PIN_LOW) {
             squeeze = DISABLED;
             key = DAH;
+        } else  {  // both keys are high
+            if (squeeze == ENABLED) {
+                squeeze = DISABLED;
+                if (iambicMode == IAMBIC_MODE_B) {
+                    (key == DAH) ? (key = DIT) : (key = DAH);
+                }
+            } else if (buttonPressed == BTN_PRESSED_DIT) {
+                key = DIT;
+            } else if (buttonPressed == BTN_PRESSED_DAH) {
+                key = DAH;
+            } else {
+                break;
+            }
+        }
+        buttonPressed = BTN_PRESSED_NONE;
+    } while (1);
+    buttonPressed = BTN_PRESSED_NONE;
+}
+
+/*
+void ditdah(uint8_t key)
+{
+    uint8_t done;
+    uint8_t count;
+    uint8_t ditKeyState;
+    uint8_t dahKeyState;
+    uint8_t squeeze = DISABLED;
+    extern uint8_t txMode;
+    extern uint8_t paddleOrientation;  // paddles configured for dah-dit or dit-dah
+    extern uint8_t cwMsgState;  // indicates if recording cw message
+    extern uint16_t *cwMemPtr;
+    extern uint8_t volatile buttonPressed;
+
+    do {
+
+        // start the sidetone and, if needed, cw message timer
+        Timer_A_startCounter(TIMER_A0_BASE,TIMER_A_UP_MODE);  // start side tone
+        if (cwMsgState == RECORD)
+        {
+            Timer_A_stop(TIMER_A3_BASE);  // stop cw msg timer
+            if (Timer_A_getInterruptStatus(TIMER_A3_BASE) == TIMER_A_INTERRUPT_PENDING)
+            {
+                // timer overflow - limit delay to max (2 seconds)
+                *cwMemPtr++ = 0xFFFF;
+                Timer_A_clearTimerInterrupt(TIMER_A3_BASE);
+            } else {
+                *cwMemPtr++ = Timer_A_getCounterValue(TIMER_A3_BASE);
+            }
+            Timer_A_clear(TIMER_A3_BASE);  // clear timer
+            Timer_A_startCounter(TIMER_A3_BASE,TIMER_A_CONTINUOUS_MODE);  // start measuring keyDown time
+        }
+
+        // if transmitter enabled, turn on
+        if (txMode == ENABLED)
+            keyDown();
+
+        // Prepare dit dah timer
+        Timer_A_clearCaptureCompareInterrupt(TIMER_A2_BASE, TIMER_A_CAPTURECOMPARE_REGISTER_0);
+        Timer_A_clear(TIMER_A2_BASE);  // clear timer
+
+        // Start dit/dah delay timer
+        count = 0;
+        while (count < key)
+        {
+            done = Timer_A_getCaptureCompareInterruptStatus(TIMER_A2_BASE,TIMER_A_CAPTURECOMPARE_REGISTER_0,TIMER_A_CAPTURECOMPARE_INTERRUPT_FLAG);
+            if (done == TIMER_A_CAPTURECOMPARE_INTERRUPT_FLAG)
+            {
+                count++;
+                Timer_A_clearCaptureCompareInterrupt(TIMER_A2_BASE, TIMER_A_CAPTURECOMPARE_REGISTER_0);
+            }
+        }
+        //  stop transmission (if enabled) and stop side tone and cw message timer if needed
+        if (txMode == ENABLED)
+            keyUp();
+        Timer_A_stop(TIMER_A0_BASE);  // stop side tone
+        if (cwMsgState == RECORD)
+        {
+            Timer_A_stop(TIMER_A3_BASE);  // stop cw msg timer
+            *cwMemPtr++ = Timer_A_getCounterValue(TIMER_A3_BASE);
+            Timer_A_clear(TIMER_A3_BASE);  // clear timer
+            Timer_A_startCounter(TIMER_A3_BASE,TIMER_A_CONTINUOUS_MODE);  // start measuring keyUp time
+        }
+        // Wait one dit time
+        Timer_A_clear(TIMER_A2_BASE);  // clear dit/dah timer
+        Timer_A_clearCaptureCompareInterrupt(TIMER_A2_BASE, TIMER_A_CAPTURECOMPARE_REGISTER_0);
+        do {
+            done = Timer_A_getCaptureCompareInterruptStatus(TIMER_A2_BASE,TIMER_A_CAPTURECOMPARE_REGISTER_0,TIMER_A_CAPTURECOMPARE_INTERRUPT_FLAG);
+        } while (done != TIMER_A_CAPTURECOMPARE_INTERRUPT_FLAG);
+        Timer_A_clearCaptureCompareInterrupt(TIMER_A2_BASE, TIMER_A_CAPTURECOMPARE_REGISTER_0);
+
+        // completion of key sent; now determine what to do next
+        if (paddleOrientation == PADDLE_DAH_DIT){
+            ditKeyState = GPIO_getInputPinValue(DIT_KEY);
+            dahKeyState = GPIO_getInputPinValue(DAH_KEY);
+        }
+        else {
+            ditKeyState = GPIO_getInputPinValue(DAH_KEY);
+            dahKeyState = GPIO_getInputPinValue(DIT_KEY);
+        }
+
+        if (ditKeyState == GPIO_INPUT_PIN_LOW && dahKeyState == GPIO_INPUT_PIN_LOW){
+            squeeze = ENABLED;
+            if (iambicMode != IAMBIC_MODE_ULTIMATIC){
+                (key == DAH) ? (key = DIT) : (key = DAH);  // alternate dit/dah
+            } else if (buttonPressed != BTN_PRESSED_NONE){
+                (buttonPressed == BTN_PRESSED_DIT) ? (key = DIT) : (key = DAH);
+            }
+        } else if (ditKeyState == GPIO_INPUT_PIN_LOW && dahKeyState == GPIO_INPUT_PIN_HIGH) {
+            squeeze = DISABLED;
+            key = DIT;
+        } else if (ditKeyState == GPIO_INPUT_PIN_HIGH && dahKeyState == GPIO_INPUT_PIN_LOW) {
+            squeeze = DISABLED;
+            key = DAH;
         } else if (ditKeyState == GPIO_INPUT_PIN_HIGH && dahKeyState == GPIO_INPUT_PIN_HIGH) {
             if (iambicMode == IAMBIC_MODE_B) {
                 if (squeeze == ENABLED) {
@@ -353,4 +466,4 @@ void ditdah(uint8_t key)
     } while (1);
     buttonPressed = BTN_PRESSED_NONE;
 }
-
+*/

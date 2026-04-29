@@ -1,1 +1,35 @@
-/Debug/
+# Code Composer Studio (CCS) specific files
+.metadata/
+.cproject
+.project
+.settings/
+
+# Build artifacts and temporary files
+Debug/
+Release/
+*.out
+*.hex
+*.map
+*.obj
+*.lib
+*.a
+*.d
+*.i
+*.lst
+*.pp
+*.sbr
+*.tds
+*.bak
+*.log
+*.err
+*.dep
+*.cmd
+*.mk
+*.pjt
+*.opt
+*.pref
+*.tps
+*.trc
+*.xml
+*.zip
+*.bin

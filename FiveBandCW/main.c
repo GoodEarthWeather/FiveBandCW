@@ -1,6 +1,6 @@
 #include "driverlib.h"
 #include "main.h"
-#include "lcdlib.h"
+#include "lcdLib.h"
 
 
 uint8_t encoderCWCount, encoderCCWCount;
