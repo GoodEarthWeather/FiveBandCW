@@ -334,16 +334,16 @@ void ditdah(uint8_t key)
             squeeze = DISABLED;
             key = DAH;
         } else  {  // both keys are high
-            if (squeeze == ENABLED) {
+            if (buttonPressed == BTN_PRESSED_DIT) {
+                key = DIT;
+            } else if (buttonPressed == BTN_PRESSED_DAH) {
+                key = DAH;
+            } else if (squeeze == ENABLED) {
                 squeeze = DISABLED;
                 if (iambicMode == IAMBIC_MODE_B) {
                     (key == DAH) ? (key = DIT) : (key = DAH);
                 }
-            } else if (buttonPressed == BTN_PRESSED_DIT) {
-                key = DIT;
-            } else if (buttonPressed == BTN_PRESSED_DAH) {
-                key = DAH;
-            } else {
+           } else {
                 break;
             }
         }
@@ -351,7 +351,6 @@ void ditdah(uint8_t key)
     } while (1);
     buttonPressed = BTN_PRESSED_NONE;
 }
-
 /*
 void ditdah(uint8_t key)
 {
@@ -446,18 +445,16 @@ void ditdah(uint8_t key)
         } else if (ditKeyState == GPIO_INPUT_PIN_HIGH && dahKeyState == GPIO_INPUT_PIN_LOW) {
             squeeze = DISABLED;
             key = DAH;
-        } else if (ditKeyState == GPIO_INPUT_PIN_HIGH && dahKeyState == GPIO_INPUT_PIN_HIGH) {
-            if (iambicMode == IAMBIC_MODE_B) {
-                if (squeeze == ENABLED) {
-                    squeeze = DISABLED;
+        } else  {  // both keys are high
+            if (squeeze == ENABLED) {
+                squeeze = DISABLED;
+                if (iambicMode == IAMBIC_MODE_B) {
                     (key == DAH) ? (key = DIT) : (key = DAH);
-                } else if (buttonPressed == BTN_PRESSED_DIT) {
-                    key = DIT;
-                } else if (buttonPressed == BTN_PRESSED_DAH) {
-                    key = DAH;
-                } else {
-                    break;
                 }
+            } else if (buttonPressed == BTN_PRESSED_DIT) {
+                key = DIT;
+            } else if (buttonPressed == BTN_PRESSED_DAH) {
+                key = DAH;
             } else {
                 break;
             }
